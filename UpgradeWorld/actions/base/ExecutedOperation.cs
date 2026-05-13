@@ -15,6 +15,7 @@ public abstract class ExecutedOperation(Terminal context, bool pin = false) : Ba
   public DateTime? StartedAt { get; private set; }
   public DateTime? EndedAt { get; private set; }
   public Exception? FailureException { get; private set; }
+  public string? SkippedReason { get; private set; }
   public bool Finished { get; private set; }
   public bool Success => Finished && FailureException == null && Failed == 0 && State == "completed";
   public long? DurationMs => StartedAt.HasValue && EndedAt.HasValue ? (long)EndedAt.Value.Subtract(StartedAt.Value).TotalMilliseconds : null;
@@ -32,7 +33,7 @@ public abstract class ExecutedOperation(Terminal context, bool pin = false) : Ba
   }
   public void MarkCompleted()
   {
-    State = "completed";
+    State = Failed == 0 ? "completed" : "failed";
     Finished = true;
     EndedAt = DateTime.UtcNow;
   }
@@ -43,11 +44,22 @@ public abstract class ExecutedOperation(Terminal context, bool pin = false) : Ba
     FailureException = exception;
     EndedAt = DateTime.UtcNow;
   }
+  public void MarkSkipped(string reason)
+  {
+    State = "skipped";
+    Finished = false;
+    SkippedReason = reason;
+    EndedAt = DateTime.UtcNow;
+  }
   public void MarkCancelled()
   {
     State = "cancelled";
     Finished = false;
     EndedAt = DateTime.UtcNow;
+  }
+  public void PrintError(string message)
+  {
+    Helper.AddError(Context, message);
   }
 
   public IEnumerator Execute(Stopwatch sw)

@@ -20,6 +20,18 @@ public static class OperationEventReporter
 
   public static void Emit(ExecutedOperation operation, string eventName, Dictionary<string, object?>? extra = null)
   {
+    try
+    {
+      EmitUnsafe(operation, eventName, extra);
+    }
+    catch (Exception e)
+    {
+      WarnFailure(e);
+    }
+  }
+
+  private static void EmitUnsafe(ExecutedOperation operation, string eventName, Dictionary<string, object?>? extra)
+  {
     if (!Settings.OperationEventsEnabled) return;
 
     var values = new Dictionary<string, object?>
@@ -38,7 +50,8 @@ public static class OperationEventReporter
       ["endedAt"] = FormatTime(operation.EndedAt),
       ["durationMs"] = operation.DurationMs,
       ["exception"] = operation.FailureException?.GetType().Name,
-      ["exceptionMessage"] = operation.FailureException?.Message
+      ["exceptionMessage"] = operation.FailureException?.Message,
+      ["skippedReason"] = operation.SkippedReason
     };
 
     foreach (var detail in operation.GetEventDetails())
@@ -54,6 +67,18 @@ public static class OperationEventReporter
   }
 
   private static string? FormatTime(DateTime? time) => time?.ToUniversalTime().ToString("o");
+
+  private static void WarnFailure(Exception e)
+  {
+    try
+    {
+      UpgradeWorld.Log.LogWarning($"Failed to emit Upgrade World operation event: {e.Message}");
+    }
+    catch
+    {
+      // Event reporting must never interrupt operation execution.
+    }
+  }
 
   private static void WriteFile(string json)
   {
@@ -76,7 +101,7 @@ public static class OperationEventReporter
     }
     catch (Exception e)
     {
-      UpgradeWorld.Log.LogWarning($"Failed to write Upgrade World operation event: {e.Message}");
+      WarnFailure(e);
     }
   }
 

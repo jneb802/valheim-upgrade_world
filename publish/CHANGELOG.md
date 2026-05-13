@@ -1,3 +1,8 @@
+- v1.81
+  - Improves operation event reporting so reporting failures can't interrupt operations.
+  - Adds event output for initialization failures and skipped operations.
+  - Reports unsuccessful terminal operations as failed and makes terminal queue length reflect remaining queued work.
+
 - v1.80
   - Adds structured operation lifecycle events for queued, running, completed, failed, and cancelled Upgrade World operations.
   - Adds optional JSONL and BepInEx log output for operation results, including command text, timing, success state, errors, zone progress, and reset counts.

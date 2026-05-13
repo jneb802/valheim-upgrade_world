@@ -29,11 +29,15 @@ public static class Executor
   public static void StopExecution()
   {
     if (context == null) throw new Exception("Executor context is not set. Call Executor.SetContext from a MonoBehaviour before stopping execution.");
-    foreach (var operation in operations)
+    for (var i = 0; i < operations.Count; ++i)
     {
+      var operation = operations[i];
       if (operation.State is "completed" or "failed" or "cancelled") continue;
       operation.MarkCancelled();
-      OperationEventReporter.Emit(operation, "cancelled");
+      OperationEventReporter.Emit(operation, "cancelled", new()
+      {
+        ["queueLength"] = operations.Count - i - 1
+      });
     }
     operations.Clear();
     // Needed to indicate end of generation for some mods.
@@ -47,9 +51,33 @@ public static class Executor
   public static void AddOperation(ExecutedOperation operation, bool autoStart)
   {
     bool start = Settings.AutoStart || autoStart;
-    if (!operation.Init(start))
-      return;
     operation.SetCommand(OperationCommandContext.Current);
+    try
+    {
+      if (!operation.Init(start))
+      {
+        operation.MarkSkipped("Operation initialization produced no queued work.");
+        OperationEventReporter.Emit(operation, "skipped", new()
+        {
+          ["queueLength"] = operations.Count,
+          ["autoStart"] = start,
+          ["phase"] = "init"
+        });
+        return;
+      }
+    }
+    catch (Exception e)
+    {
+      operation.PrintError(e.Message);
+      operation.MarkFailed(e);
+      OperationEventReporter.Emit(operation, "failed", new()
+      {
+        ["queueLength"] = operations.Count,
+        ["autoStart"] = start,
+        ["phase"] = "init"
+      });
+      return;
+    }
     operation.MarkQueued();
     operations.Add(operation);
     OperationEventReporter.Emit(operation, "queued", new()
@@ -80,11 +108,11 @@ public static class Executor
         ["queueLength"] = operations.Count
       });
       yield return operation.Execute(sw);
-      OperationEventReporter.Emit(operation, operation.State == "failed" ? "failed" : "completed", new()
+      operations.RemoveAt(0);
+      OperationEventReporter.Emit(operation, operation.Success ? "completed" : "failed", new()
       {
         ["queueLength"] = operations.Count
       });
-      operations.RemoveAt(0);
     }
     sw.Stop();
     StopExecution();
