@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 namespace UpgradeWorld;
 ///<summary>Runs the vegetation placement code for the filtered zones.</summary>
@@ -30,6 +31,13 @@ public class AddVegetation : VegetationOperation
     var text = $"{Operation} completed. {Counter} vegetations added.";
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
+  }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    details["vegetationAdded"] = Counter;
+    details["targetPrefabs"] = Ids.ToArray();
+    return details;
   }
   public static List<ZoneSystem.ClearArea> GetClearAreas(Vector2i zone)
   {

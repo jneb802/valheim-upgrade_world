@@ -1,3 +1,7 @@
+- v1.78
+  - Adds structured operation lifecycle events for queued, running, completed, failed, and cancelled Upgrade World operations.
+  - Adds optional JSONL and BepInEx log output for operation results, including command text, timing, success state, errors, zone progress, and reset counts.
+
 - v1.77
   - Fixes the command `location_add` not always spawning all locations properly (related to location groups).
 

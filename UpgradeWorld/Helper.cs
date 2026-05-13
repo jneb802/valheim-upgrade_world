@@ -188,7 +188,7 @@ public static class Helper
     {
       try
       {
-        action(args);
+        OperationCommandContext.Run(args, () => action(args));
       }
       catch (InvalidOperationException e)
       {
@@ -204,7 +204,9 @@ public static class Helper
     {
       try
       {
-        return action(args);
+        object? output = null;
+        OperationCommandContext.Run(args, () => output = action(args));
+        return output;
       }
       catch (InvalidOperationException e)
       {

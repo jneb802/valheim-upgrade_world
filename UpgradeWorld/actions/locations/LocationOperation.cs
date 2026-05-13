@@ -35,6 +35,13 @@ public abstract class LocationOperation : ZoneOperation
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
   }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    details["locationsOperated"] = Operated;
+    details["locationVerb"] = Verb;
+    return details;
+  }
   /// <summary>Spawns a location to the game world.</summary>
   protected void SpawnLocation(Vector2i zone, ZoneSystem.LocationInstance location, float clearRadius)
   {

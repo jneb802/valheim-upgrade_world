@@ -8,6 +8,7 @@ public class RemoveLocations : ExecutedOperation
 {
   readonly HashSet<string> Ids;
   readonly FiltererParameters Args;
+  private int Removed = 0;
   public RemoveLocations(Terminal context, HashSet<string> ids, FiltererParameters args) : base(context, args.Start)
   {
     Args = new(args)
@@ -92,13 +93,21 @@ public class RemoveLocations : ExecutedOperation
 
   protected override IEnumerator OnExecute(Stopwatch sw)
   {
-    var removed = RemoveSpawned() + RemoveNotSpawned();
-    Print($"Removed {removed} locations.");
+    Removed = RemoveSpawned() + RemoveNotSpawned();
+    Print($"Removed {Removed} locations.");
     yield break;
   }
 
   protected override string OnInit()
   {
     return Args.Print($"Remove locations{LocationOperation.IdString(Ids)} from");
+  }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    details["operation"] = "Remove locations";
+    details["locationsRemoved"] = Removed;
+    details["targetLocations"] = Ids.ToArray();
+    return details;
   }
 }

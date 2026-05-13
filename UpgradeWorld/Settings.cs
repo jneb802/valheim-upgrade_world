@@ -36,6 +36,12 @@ public static class Settings
   public static int SafeZoneSize => configSafeZoneSize.Value;
   public static ConfigEntry<string> configTimeBasedDataNames;
   public static IEnumerable<string> TimeBasedDataNames => configTimeBasedDataNames.Value.Split(',').Select(name => name.Trim());
+  public static ConfigEntry<bool> configOperationEventsEnabled;
+  public static bool OperationEventsEnabled => configOperationEventsEnabled.Value;
+  public static ConfigEntry<bool> configOperationEventsToLog;
+  public static bool OperationEventsToLog => configOperationEventsToLog.Value;
+  public static ConfigEntry<string> configOperationEventsFile;
+  public static string OperationEventsFile => configOperationEventsFile.Value;
   public static int ZoneControlHash = "_ZoneCtrl".GetStableHashCode();
 
   public static int TerrainCompilerHash = "_TerrainCompiler".GetStableHashCode();
@@ -73,6 +79,11 @@ public static class Settings
     configRootUsers.SettingChanged += (sender, args) => UpdateRootUsers();
     UpdateRootUsers();
     configDisableAutomaticGenloc = config.Bind(section, "Disable automatic genloc", false, "If enabled, new content updates won't automatically redistribute locations.");
+
+    section = "2. Operation events";
+    configOperationEventsEnabled = config.Bind(section, "Enabled", true, "If true, queued Upgrade World operations emit structured lifecycle events.");
+    configOperationEventsToLog = config.Bind(section, "Log output", true, "If true, operation events are written to the BepInEx log with the [UpgradeWorldEvent] prefix.");
+    configOperationEventsFile = config.Bind(section, "JSONL file", "upgrade_world_events.jsonl", "Path for operation event JSON lines. Relative paths are resolved under BepInEx/config.");
 
     configTimeBasedDataNames = config.Bind("3. Change time/day", "Time based data names", "spawntime,lastTime,SpawnTime,StartTime,alive_time,spawn_time,picked_time,plantTime,pregnant,TameLastFeeding", "Names of the data values that should be updated with the new time. Changing these is NOT recommended.");
   }

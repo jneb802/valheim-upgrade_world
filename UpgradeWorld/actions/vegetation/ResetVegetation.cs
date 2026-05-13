@@ -83,4 +83,12 @@ public class ResetVegetation : VegetationOperation
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
   }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    details["vegetationRemoved"] = Removed;
+    details["vegetationAdded"] = Counter;
+    details["targetPrefabs"] = Ids.ToArray();
+    return details;
+  }
 }

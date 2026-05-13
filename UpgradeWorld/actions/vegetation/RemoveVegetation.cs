@@ -49,4 +49,10 @@ public class RemoveVegetation : ZoneOperation
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
   }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    details["vegetationRemoved"] = Removed;
+    return details;
+  }
 }

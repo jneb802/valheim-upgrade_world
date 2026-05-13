@@ -93,4 +93,15 @@ public abstract class ZoneOperation(Terminal context, FiltererParameters args) :
       PrintOnce(Operation + ": " + percent + "%", false);
     }
   }
+  public override Dictionary<string, object?> GetEventDetails()
+  {
+    var details = base.GetEventDetails();
+    var total = ZonesToUpgrade?.Length ?? 0;
+    details["operation"] = Operation;
+    details["zonesTotal"] = total + PreOperated;
+    details["zonesProcessed"] = Math.Min(ZoneIndex + PreOperated, total + PreOperated);
+    details["zonesFailed"] = Failed;
+    details["zonesRemaining"] = Math.Max(0, total - ZoneIndex);
+    return details;
+  }
 }

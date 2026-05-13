@@ -29,6 +29,12 @@ public static class Executor
   public static void StopExecution()
   {
     if (context == null) throw new Exception("Executor context is not set. Call Executor.SetContext from a MonoBehaviour before stopping execution.");
+    foreach (var operation in operations)
+    {
+      if (operation.State is "completed" or "failed" or "cancelled") continue;
+      operation.MarkCancelled();
+      OperationEventReporter.Emit(operation, "cancelled");
+    }
     operations.Clear();
     // Needed to indicate end of generation for some mods.
     if (Hud.instance)
@@ -43,7 +49,14 @@ public static class Executor
     bool start = Settings.AutoStart || autoStart;
     if (!operation.Init(start))
       return;
+    operation.SetCommand(OperationCommandContext.Current);
+    operation.MarkQueued();
     operations.Add(operation);
+    OperationEventReporter.Emit(operation, "queued", new()
+    {
+      ["queueLength"] = operations.Count,
+      ["autoStart"] = start
+    });
 
     if (executionCoroutine == null && start)
       StartExecution();
@@ -60,7 +73,17 @@ public static class Executor
     while (operations.Count > 0)
     {
       sw.Restart();
-      yield return operations[0].Execute(sw);
+      var operation = operations[0];
+      operation.MarkRunning();
+      OperationEventReporter.Emit(operation, "running", new()
+      {
+        ["queueLength"] = operations.Count
+      });
+      yield return operation.Execute(sw);
+      OperationEventReporter.Emit(operation, operation.State == "failed" ? "failed" : "completed", new()
+      {
+        ["queueLength"] = operations.Count
+      });
       operations.RemoveAt(0);
     }
     sw.Stop();
