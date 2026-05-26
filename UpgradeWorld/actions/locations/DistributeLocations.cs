@@ -7,7 +7,7 @@ using HarmonyLib;
 using UnityEngine;
 
 namespace UpgradeWorld;
-/// <summary>Distributes given location ids to already generated zones.</summary>
+// Distributes given location ids to already generated zones
 public class DistributeLocations : ExecutedOperation
 {
   private readonly string[] Ids = [];
@@ -47,18 +47,46 @@ public class DistributeLocations : ExecutedOperation
       yield break;
     }
     ClearNotSpawned(Ids);
-    var counter = 0;
+
+    var zs = ZoneSystem.instance;
+
+
+    // If LPA is present, hand spatial allocation to it otherwise run UW's own generation loop. 
+    if (LPA.IsAvailable())
+    {
+      Print("LPA detected. Handing off spatial allocation.");
+      var lpaRequests = new Dictionary<ZoneSystem.ZoneLocation, int>();
+      foreach (var id in Ids)
+      {
+        foreach (var location in zs.m_locations.Where(loc => Helper.IsValid(loc) && loc.m_prefab.Name == id))
+        {
+          lpaRequests[location] = location.m_quantity;
+        }
+      }
+      if (lpaRequests.Count > 0)
+      {
+        yield return LPA.RunCustomPlacement(lpaRequests, AllowedZones);
+      }
+    }
+    else
+    {
+      var counter = 0;
+      foreach (var id in Ids)
+      {
+        counter += 1;
+        var locations = zs.m_locations.Where(location => Helper.IsValid(location) && location.m_prefab.Name == id).ToArray();
+        if (locations.Length == 0)
+          continue;
+        Print($"Generating locations {id}. This may take a while...");
+        foreach (var location in locations)
+          yield return GenerateLocationsTimeSliced(location, sw);
+      }
+    }
+
+    // Post-processing should be identical for both paths.
     foreach (var id in Ids)
     {
-      counter += 1;
-      var zs = ZoneSystem.instance;
-      var locations = zs.m_locations.Where(location => Helper.IsValid(location) && location.m_prefab.Name == id).ToArray();
-      if (locations.Length == 0)
-        continue;
-      Print($"Generating locations {id}. This may take a while...");
       var before = Counts.TryGetValue(id, out var count) ? count : 0;
-      foreach (var location in locations)
-        yield return GenerateLocationsTimeSliced(location, sw);
       if (Chance < 1f)
       {
         zs.m_locationInstances = zs.m_locationInstances
@@ -70,6 +98,7 @@ public class DistributeLocations : ExecutedOperation
       Total += Count(id);
       Added += Total - before;
     }
+
     // Needed to indicate end of generation for some mods.
     if (Hud.instance)
       Hud.instance.m_loadingIndicator.SetShowProgress(false);
