@@ -15,7 +15,9 @@ public class SpawnLocationCommand
       { "rotation", subIndex => CommandWrapper.Info("Rotation as y,x,z degrees.") },
       { "rot", subIndex => CommandWrapper.Info("Rotation as y,x,z degrees.") },
       { "seed", subIndex => CommandWrapper.Info("Location random seed.") },
-      { "dungeonSeed", subIndex => CommandWrapper.Info("Dungeon random seed.") }
+      { "dungeonSeed", subIndex => CommandWrapper.Info("Dungeon random seed.") },
+      { "register", subIndex => CommandWrapper.Info("Whether to register the spawned location instance.") },
+      { "replace", subIndex => CommandWrapper.Info("Whether to replace an existing location instance in the target zone.") }
     };
     CommandWrapper.Register("spawn_location", (index, subIndex) =>
     {
@@ -43,12 +45,19 @@ public class SpawnLocationCommand
       var dungeonSeed = int.MinValue;
       var snapToGround = false;
       var hasPosition = false;
+      var register = false;
+      var replace = false;
 
       foreach (var arg in args.Args)
       {
         var split = Parse.SplitWithEmpty(arg, '=');
-        if (split.Length < 2) continue;
         var name = split[0].ToLower();
+        if (split.Length < 2)
+        {
+          if (name == "register") register = true;
+          else if (name == "replace") replace = true;
+          continue;
+        }
         var value = split[1];
         if (name == "pos" || name == "position")
         {
@@ -69,6 +78,14 @@ public class SpawnLocationCommand
         {
           dungeonSeed = Parse.Int(value, dungeonSeed);
         }
+        else if (name == "register")
+        {
+          register = Parse.Boolean(value) ?? register;
+        }
+        else if (name == "replace")
+        {
+          replace = Parse.Boolean(value) ?? replace;
+        }
       }
 
       if (!hasPosition && !Player.m_localPlayer && ServerExecution.User == null)
@@ -84,7 +101,23 @@ public class SpawnLocationCommand
 
       DungeonGenerator.m_forceSeed = dungeonSeed;
       zs.SpawnLocation(location, seed, position, rotation, ZoneSystem.SpawnMode.Full, []);
+      if (register)
+        RegisterLocationInstance(zs, location, position, replace);
       Helper.Print(args.Context, $"Spawned location {id} at {Helper.PrintVectorXZY(position)}.");
     }, LocationOperation.AllIds);
+  }
+
+  private static void RegisterLocationInstance(ZoneSystem zs, ZoneSystem.ZoneLocation location, Vector3 position, bool replace)
+  {
+    var zone = ZoneSystem.GetZone(position);
+    if (zs.m_locationInstances.TryGetValue(zone, out var existing) && !replace)
+      throw new InvalidOperationException($"Zone {zone} already has location {existing.m_location.m_prefab.Name}. Use replace=true to overwrite it.");
+
+    zs.m_locationInstances[zone] = new ZoneSystem.LocationInstance
+    {
+      m_location = location,
+      m_position = position,
+      m_placed = true
+    };
   }
 }
