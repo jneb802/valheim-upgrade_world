@@ -1,3 +1,6 @@
+- v1.82
+  - Adds a server-safe `spawn_location` command for spawning a location at explicit coordinates without a local player.
+
 - v1.81
   - Adds compatibility with Location Placement Accelerator mod. Thanks Kurios.ZeuS!
   - Improves parameter parsing to not omit empty values.

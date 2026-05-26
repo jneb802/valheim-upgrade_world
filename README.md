@@ -118,6 +118,7 @@ Overview of available commands (remember that tab key can be used for autocomple
 - `locations_remove [id1,id2,...] [...args]`: Removes locations and prevents new ones from appearing (until a command like `genloc` or `locations_add` is used). `chance` determines how many of the locations are removed.
 - `locations_reset [id1,id2,...] [...args]`: Resets locations by removing them and then placing them at the same position. Dungeons which have a random rotation will also get a new layout. `chance` determines how many of the locations are reseted.
 - `locations_swap [new id,id1,id2,...] [...args]`: Replaces locations with a new one.
+- `spawn_location [id] [pos=x,z,y] [...args]`: Spawns a location without disabling world saving. If y is omitted, ground height is used.
 - `objects_count [id1,id2,...] [...args]`: Counts objects. If no ids given then counts all objects. Parameter `count=1` can be used to exclude non-existing objects.
 - `objects_edit [id1,id2,...] [data=key,value,type] [...args]`: Edits data of objects.
 - `objects_list [id1,id2,...] [print=key,type] [...args]`: Lists objects showing their position and biome. `print` allows displaying custom data.
@@ -155,6 +156,7 @@ Examples:
 - `chests_reset looted min=1500`: Resets all chests which are 1500 meters away from the world center.
 - `locations_remove Meteorite`: Removes all flametal ores.
 - `locations_reset SunkenCrypt4,Crypt2,Crypt3,Crypt4,MountainCave02,TrollCave02`: To regenerate dungeons. Some entraces will randomly rotate which will also randomize the dungeon layout.
+- `spawn_location DevHouse1 pos=1000,-500`: Spawns a location at given coordinates without disabling world saving. If y is omitted, ground height is used.
 - `objects_count Spawner_\*`: Counts all creature spawnpoints.
 - `objects_count \*\_wall\*\_`: Counts all walls structures.
 - `objects_list VikingShip,Karve,Raft`: Lists coordinates of all ships.
