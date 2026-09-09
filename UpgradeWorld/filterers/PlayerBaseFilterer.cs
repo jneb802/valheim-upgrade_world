@@ -5,7 +5,7 @@ namespace UpgradeWorld;
 ///<summary>Filters zones based on whether they include a player base item.</summary>
 public class PlayerBaseFilterer(int size) : IZoneFilterer
 {
-  public static HashSet<Vector2i> ExcludedZones = [];
+  public static HashSet<Vector2s> ExcludedZones = [];
   public static DateTime LastUpdate = DateTime.MinValue;
   public static int LastSize = 0;
   public int Size = size;
@@ -19,9 +19,9 @@ public class PlayerBaseFilterer(int size) : IZoneFilterer
       LastSize = Size;
     }
   }
-  private static HashSet<Vector2i> CalculateExcluded(int size)
+  private static HashSet<Vector2s> CalculateExcluded(int size)
   {
-    HashSet<Vector2i> excludedZones = [];
+    HashSet<Vector2s> excludedZones = [];
     if (size == 0) return excludedZones;
     var adjacent = size - 1;
     var ids = Settings.SafeZoneItems;
@@ -34,13 +34,14 @@ public class PlayerBaseFilterer(int size) : IZoneFilterer
       {
         for (var j = -adjacent; j <= adjacent; j++)
         {
-          excludedZones.Add(new(zone.x + i, zone.y + j));
+          if (Zones.TryCreate(zone.x + i, zone.y + j, out Vector2s excluded))
+            excludedZones.Add(excluded);
         }
       }
     }
     return excludedZones;
   }
-  public Vector2i[] FilterZones(Vector2i[] zones, ref List<string> messages)
+  public Vector2s[] FilterZones(Vector2s[] zones, ref List<string> messages)
   {
     CalculateExcluded();
     var amount = zones.Length;

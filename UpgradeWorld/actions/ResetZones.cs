@@ -5,7 +5,7 @@ namespace UpgradeWorld;
 /// <summary>Destroys everything in a zone so that the world generator can regenerate it.</summary>
 public class ResetZones : ZoneOperation
 {
-  private Dictionary<Vector2i, Direction> BorderZones = [];
+  private Dictionary<Vector2s, Direction> BorderZones = [];
   public ResetZones(Terminal context, FiltererParameters args) : base(context, args)
   {
     Operation = "Reset";
@@ -14,7 +14,7 @@ public class ResetZones : ZoneOperation
     Filterers = FiltererFactory.Create(args);
   }
   private int Reseted = 0;
-  protected override bool ExecuteZone(Vector2i zone)
+  protected override bool ExecuteZone(Vector2s zone)
   {
     var zs = ZoneSystem.instance;
     var scene = ZNetScene.instance;
@@ -36,7 +36,7 @@ public class ResetZones : ZoneOperation
     {
       location.m_placed = false;
       location.m_position = new(location.m_position.x, WorldGenerator.instance.GetHeight(location.m_position.x, location.m_position.z), location.m_position.z);
-      zs.m_locationInstances[zone] = location;
+      LocationRegistry.Set(zone, location);
     }
     zs.m_generatedZones.Remove(zone);
     if (zs.m_zones.TryGetValue(zone, out var z))
@@ -55,34 +55,17 @@ public class ResetZones : ZoneOperation
     AddBorder(zone, Direction.SouthEast);
     return true;
   }
-  private void AddBorder(Vector2i zone, Direction direction)
+  private void AddBorder(Vector2s zone, Direction direction)
   {
-    if (direction == Direction.North) zone.y -= 1;
-    if (direction == Direction.East) zone.x -= 1;
-    if (direction == Direction.South) zone.y += 1;
-    if (direction == Direction.West) zone.x += 1;
-    if (direction == Direction.NorthWest)
-    {
-      zone.y -= 1;
-      zone.x += 1;
-    }
-    if (direction == Direction.NorthEast)
-    {
-      zone.y -= 1;
-      zone.x -= 1;
-    }
-    if (direction == Direction.SouthWest)
-    {
-      zone.y += 1;
-      zone.x += 1;
-    }
-    if (direction == Direction.SouthEast)
-    {
-      zone.y += 1;
-      zone.x -= 1;
-    }
-    if (BorderZones.ContainsKey(zone)) direction |= BorderZones[zone];
-    BorderZones[zone] = direction;
+    int x = zone.x;
+    int y = zone.y;
+    if (direction == Direction.North || direction == Direction.NorthWest || direction == Direction.NorthEast) y--;
+    if (direction == Direction.South || direction == Direction.SouthWest || direction == Direction.SouthEast) y++;
+    if (direction == Direction.East || direction == Direction.NorthEast || direction == Direction.SouthEast) x--;
+    if (direction == Direction.West || direction == Direction.NorthWest || direction == Direction.SouthWest) x++;
+    if (!Zones.TryCreate(x, y, out Vector2s border)) return;
+    if (BorderZones.TryGetValue(border, out Direction previous)) direction |= previous;
+    BorderZones[border] = direction;
   }
 
   protected override void OnEnd()

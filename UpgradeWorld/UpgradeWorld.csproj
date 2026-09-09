@@ -5,7 +5,7 @@
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <Target Name="CopyDLL" AfterTargets="Build">
+  <Target Name="CopyDLL" AfterTargets="Build" Condition="'$(CopyToLibs)' == 'true'">
     <Copy
       SourceFiles="$(TargetDir)$(ProjectName).dll"
       DestinationFolder="$(ProjectDir)\..\..\Libs" />
@@ -13,7 +13,7 @@
   </Target>
   <ItemGroup>
     <Reference Include="BepInEx">
-      <HintPath>..\..\Libs\BepinEx.dll</HintPath>
+      <HintPath>..\..\Libs\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\Libs\UnityEngine.dll</HintPath>

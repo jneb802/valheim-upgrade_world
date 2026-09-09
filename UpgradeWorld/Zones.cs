@@ -12,12 +12,11 @@ public static class Zones
     return root.GetComponentInChildren<Heightmap>();
   }
 
-  private static Vector2i[] Sort(IEnumerable<Vector2i> zones)
+  private static Vector2s[] Sort(IEnumerable<Vector2s> zones)
   {
-    // Magnitude doesn't work with int.MinValue, so needs special handling.
-    return [.. zones.OrderBy(zone => zone.x == int.MinValue || zone.y == int.MinValue ? int.MinValue : zone.Magnitude())];
+    return [.. zones.OrderBy(zone => zone.Magnitude())];
   }
-  public static Vector2i[] GetZones(FiltererParameters args)
+  public static Vector2s[] GetZones(FiltererParameters args)
   {
     var zs = ZoneSystem.instance;
     if (args.Zone.HasValue && args.MaxDistance == 0f && args.MinDistance == 0f)
@@ -30,22 +29,24 @@ public static class Zones
     }
     return GetZones(args.TargetZones);
   }
-  private static Vector2i[] GetZones(TargetZones zones)
+  private static Vector2s[] GetZones(TargetZones zones)
   {
     if (zones == TargetZones.All) return GetAllZones();
     var zs = ZoneSystem.instance;
     if (zones == TargetZones.Generated) return Sort(zs.m_generatedZones);
     return [.. GetAllZones().Where(zone => !zs.m_generatedZones.Contains(zone))];
   }
-  private static Vector2i[]? AllZones;
-  public static Vector2i[] GetAllZones() => AllZones ??= GetWorldZones();
+  private static Vector2s[]? AllZones;
+  public static Vector2s[] GetAllZones() => AllZones ??= GetWorldZones();
   public static void ResetAllZones() => AllZones = null;
   // Returns an array of all zones.
-  private static Vector2i[] GetWorldZones()
+  private static Vector2s[] GetWorldZones()
   {
     var zs = ZoneSystem.instance;
     var zones = zs.m_generatedZones.ToHashSet();
     var limit = (int)Math.Ceiling(Settings.WorldRadius / zs.m_zoneSize);
+    if (limit < 0 || limit > short.MaxValue)
+      throw new InvalidOperationException("World radius exceeds the supported zone coordinates.");
     for (var i = -limit; i <= limit; i++)
     {
       for (var j = -limit; j <= limit; j++)
@@ -57,8 +58,15 @@ public static class Zones
     return Sort(zones);
   }
 
-  public static int Distance(Vector2i a, Vector2i b) => Math.Max(Math.Abs(a.x - b.x), Math.Abs(a.y - b.y));
-  public static bool IsWithin(Vector2i a, Vector2i b, int min, int max)
+  public static int Distance(Vector2s a, Vector2s b) => Math.Max(Math.Abs(a.x - b.x), Math.Abs(a.y - b.y));
+  public static bool TryCreate(int x, int y, out Vector2s zone)
+  {
+    zone = default;
+    if (x < short.MinValue || x > short.MaxValue || y < short.MinValue || y > short.MaxValue) return false;
+    zone = new Vector2s(x, y);
+    return true;
+  }
+  public static bool IsWithin(Vector2s a, Vector2s b, int min, int max)
   {
     var distance = Distance(a, b);
     if (max == 0 && min > 0) max = int.MaxValue;
@@ -66,14 +74,14 @@ public static class Zones
   }
   // Manually loaded zones must be tracked to not release active zones.
   // Otherwise terrain compiler loses track of the height map.
-  private static readonly HashSet<Vector2i> LoadedZones = [];
+  private static readonly HashSet<Vector2s> LoadedZones = [];
 
-  public static void PokeZone(Vector2i zone)
+  public static void PokeZone(Vector2s zone)
   {
     LoadedZones.Add(zone);
     ZoneSystem.instance.PokeLocalZone(zone);
   }
-  public static void ReleaseZone(Vector2i zone)
+  public static void ReleaseZone(Vector2s zone)
   {
     if (!LoadedZones.Contains(zone)) return;
     LoadedZones.Remove(zone);

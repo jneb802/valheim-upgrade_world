@@ -306,13 +306,14 @@ public static class Parse
     return parameters.Remove(key);
   }
 
-  public static Vector2i Zone(string arg)
+  public static Vector2s Zone(string arg)
   {
     var values = SplitWithEmpty(arg).ToArray();
-    Vector2i vector = new();
-    if (values.Length > 0) vector.x = Int(values[0]);
-    if (values.Length > 1) vector.y = Int(values[1]);
-    return vector;
+    int x = values.Length > 0 ? Int(values[0]) : 0;
+    int y = values.Length > 1 ? Int(values[1]) : 0;
+    if (!Zones.TryCreate(x, y, out Vector2s zone))
+      throw new InvalidOperationException("Zone coordinates must be between -32768 and 32767.");
+    return zone;
   }
   public static Vector2 Pos(string arg)
   {
