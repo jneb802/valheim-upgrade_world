@@ -26,7 +26,7 @@ public class CleanHealth : EntityOperation
       if (component?.m_health != health) continue;
       zdo.SetOwner(ZDOMan.GetSessionID());
       zdo.RemoveFloat(ZDOVars.s_health);
-      zdo.IncreaseDataRevision();
+      Helper.MarkChanged(zdo);
       updated++;
     }
     if (alwaysPrint || updated > 0)
@@ -42,7 +42,7 @@ public class CleanHealth : EntityOperation
       if (health != field) continue;
       zdo.SetOwner(ZDOMan.GetSessionID());
       zdo.RemoveFloat(ZDOVars.s_health);
-      zdo.IncreaseDataRevision();
+      Helper.MarkChanged(zdo);
       updated++;
     }
     if (alwaysPrint || updated > 0)

@@ -7,7 +7,6 @@ public class EditObjects(Terminal context, IEnumerable<string> ids, DataParamete
 {
   private bool SetData(ZDO zdo, List<string> datas)
   {
-    var revision = zdo.DataRevision;
     var result = datas.Count(data =>
     {
       var split = Parse.SplitWithEmpty(data);
@@ -21,7 +20,7 @@ public class EditObjects(Terminal context, IEnumerable<string> ids, DataParamete
     {
       if (!zdo.IsOwner())
         zdo.SetOwner(ZDOMan.GetSessionID());
-      zdo.DataRevision = revision + 1;
+      Helper.MarkChanged(zdo);
     }
     return result;
   }

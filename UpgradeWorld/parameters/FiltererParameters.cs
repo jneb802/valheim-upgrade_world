@@ -19,7 +19,7 @@ public class FiltererParameters
   public bool NoEdges = false;
   public bool Start = false;
   public Vector2? Pos = null;
-  public Vector2i? Zone = null;
+  public Vector2s? Zone = null;
   public float MinDistance = 0f;
   public float MaxDistance = 0f;
   public float Chance = 1f;

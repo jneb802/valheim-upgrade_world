@@ -14,7 +14,7 @@ public class DistributeLocations : ExecutedOperation
   public float Chance = 1f;
   public int Added = 0;
   private int Total = 0;
-  public static HashSet<Vector2i> AllowedZones = [];
+  public static HashSet<Vector2s> AllowedZones = [];
   private readonly Dictionary<string, int> Counts = [];
   public DistributeLocations(Terminal context, HashSet<string> ids, FiltererParameters args) : base(context, args.Start)
   {
@@ -92,6 +92,7 @@ public class DistributeLocations : ExecutedOperation
         zs.m_locationInstances = zs.m_locationInstances
           .Where(kvp => kvp.Value.m_placed || kvp.Value.m_location.m_prefab.Name != id || FiltererParameters.random.NextDouble() < Chance)
           .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        LocationRegistry.RebuildCaches();
       }
       var unplaced = zs.m_locationInstances.Where(kvp => kvp.Value.m_location.m_prefab.Name == id && !kvp.Value.m_placed).ToList();
       foreach (var kvp in unplaced) AddPin(kvp.Value.m_position);
@@ -110,11 +111,19 @@ public class DistributeLocations : ExecutedOperation
       Counts[id] = Count(id);
     var zs = ZoneSystem.instance;
     zs.m_locationInstances = zs.m_locationInstances.Where(kvp => kvp.Value.m_placed || !Counts.ContainsKey(kvp.Value.m_location.m_prefab.Name)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    LocationRegistry.RebuildCaches();
     // Better Continents adds its own locations after ClearNonPlacedLocations is called.
     // So a workaround is to make a dummy call.
     DummyClearNonPlacedLocations.Skip = true;
-    zs.ClearNonPlacedLocations();
-    DummyClearNonPlacedLocations.Skip = false;
+    try
+    {
+      zs.ClearNonPlacedLocations();
+    }
+    finally
+    {
+      DummyClearNonPlacedLocations.Skip = false;
+      LocationRegistry.RebuildCaches();
+    }
   }
   private int Count(string id)
   {
@@ -176,7 +185,7 @@ public class DistributeLocations : ExecutedOperation
           state = UnityEngine.Random.state;
           UnityEngine.Random.state = insideState;
         }
-        Vector2i zoneID = ZoneSystem.GetRandomZone(maxRange);
+        Vector2s zoneID = ZoneSystem.GetRandomZone(maxRange);
         if (location.m_centerFirst)
         {
           maxRange += 1f;
@@ -267,12 +276,12 @@ public class DistributeLocations : ExecutedOperation
                       num = errorTerrainDelta + 1;
                       errorTerrainDelta = num;
                     }
-                    else if (location.m_minDistanceFromSimilar > 0f && zs.HaveLocationInRange(location.m_prefab.Name, location.m_group, randomPointInZone, location.m_minDistanceFromSimilar, false))
+                    else if (location.m_minDistanceFromSimilar > 0f && zs.HaveLocationInRange(location.m_prefab.m_assetID, location.m_group, randomPointInZone, location.m_minDistanceFromSimilar, false))
                     {
                       num = errorSimilar + 1;
                       errorSimilar = num;
                     }
-                    else if (location.m_maxDistanceFromSimilar > 0f && !zs.HaveLocationInRange(location.m_prefab.Name, location.m_groupMax, randomPointInZone, location.m_maxDistanceFromSimilar, true))
+                    else if (location.m_maxDistanceFromSimilar > 0f && !zs.HaveLocationInRange(location.m_prefab.m_assetID, location.m_groupMax, randomPointInZone, location.m_maxDistanceFromSimilar, true))
                     {
                       num = errorNotSimilar + 1;
                       errorNotSimilar = num;
@@ -289,6 +298,8 @@ public class DistributeLocations : ExecutedOperation
                       {
                         if (location.m_maximumVegetation >= 1f || a < location.m_maximumVegetation)
                         {
+                          if (!LocationRegistry.Allows(location, WorldGenerator.instance.GetBiomeSector(randomPointInZone)))
+                            goto IL_7F2;
                           if (location.m_surroundCheckVegetation)
                           {
                             float num5 = 0f;

@@ -83,7 +83,7 @@ internal static class LPA
         null,
         [
                 typeof(Dictionary<ZoneSystem.ZoneLocation, int>),
-                typeof(HashSet<Vector2i>),
+                typeof(HashSet<Vector2s>),
                 optionsType
         ],
         null);
@@ -98,7 +98,7 @@ internal static class LPA
   }
 
   // Hand off a request set to LPA. 
-  public static IEnumerator RunCustomPlacement(Dictionary<ZoneSystem.ZoneLocation, int> requests, HashSet<Vector2i> allowedZones)
+  public static IEnumerator RunCustomPlacement(Dictionary<ZoneSystem.ZoneLocation, int> requests, HashSet<Vector2s> allowedZones)
   {
     if (!IsAvailable())
       yield break;

@@ -31,7 +31,7 @@ public class SwapLocations : EntityOperation
     {
       var data = locs[zone.Key];
       data.m_location = location;
-      locs[zone.Key] = data;
+      LocationRegistry.Set(zone.Key, data);
     }
     var swappedDatabase = toModify.Length;
     Print($"Swapped {swappedObjects} location objects and {swappedDatabase} location entries.", false);

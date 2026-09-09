@@ -21,12 +21,12 @@ public class FixLocations : BaseOperation
       var zone = ZoneSystem.GetZone(zdo.m_position);
       // If something already exists, no need to fix it.
       if (ZoneSystem.instance.m_locationInstances.ContainsKey(zone)) continue;
-      ZoneSystem.instance.m_locationInstances[zone] = new ZoneSystem.LocationInstance
+      LocationRegistry.Set(zone, new ZoneSystem.LocationInstance
       {
         m_location = location,
         m_position = zdo.m_position,
         m_placed = true
-      };
+      });
       Fixed++;
       AddPin(zdo.m_position);
       if (Settings.Verbose)
