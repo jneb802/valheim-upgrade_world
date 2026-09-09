@@ -14,7 +14,7 @@ public abstract class LocationOperation : ZoneOperation
     args.TargetZones = TargetZones.Generated;
     Filterers = FiltererFactory.Create(args);
   }
-  protected override bool ExecuteZone(Vector2i zone)
+  protected override bool ExecuteZone(Vector2s zone)
   {
     var zs = ZoneSystem.instance;
     var locations = zs.m_locationInstances;
@@ -28,7 +28,7 @@ public abstract class LocationOperation : ZoneOperation
     Zones.PokeZone(zone);
     return false;
   }
-  protected abstract bool ExecuteLocation(Vector2i zone, ZoneSystem.LocationInstance location);
+  protected abstract bool ExecuteLocation(Vector2s zone, ZoneSystem.LocationInstance location);
   protected override void OnEnd()
   {
     var text = $"{Operation} completed. {Operated} locations {Verb}.";
@@ -43,7 +43,7 @@ public abstract class LocationOperation : ZoneOperation
     return details;
   }
   /// <summary>Spawns a location to the game world.</summary>
-  protected void SpawnLocation(Vector2i zone, ZoneSystem.LocationInstance location, float clearRadius)
+  protected void SpawnLocation(Vector2s zone, ZoneSystem.LocationInstance location, float clearRadius)
   {
     var zs = ZoneSystem.instance;
     var root = zs.m_zones[zone].m_root;
@@ -55,6 +55,8 @@ public abstract class LocationOperation : ZoneOperation
     zs.m_tempSpawnedObjects.Clear();
     zs.m_tempClearAreas.Clear();
     zs.PlaceLocations(zone, zonePos, root.transform, heightmap, zs.m_tempClearAreas, ZoneSystem.SpawnMode.Ghost, zs.m_tempSpawnedObjects);
+    if (zs.m_locationInstances.TryGetValue(zone, out ZoneSystem.LocationInstance placed))
+      LocationRegistry.Set(zone, placed);
     foreach (var obj in zs.m_tempSpawnedObjects)
       UnityEngine.Object.Destroy(obj);
     zs.m_tempSpawnedObjects.Clear();
