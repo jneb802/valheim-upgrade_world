@@ -29,4 +29,10 @@ Use disposable worlds and development characters for these checks:
 - Test with and without a compatible Location Placement Accelerator. Older API signatures fall back to the built-in allocator.
 - Test synchronous and asynchronous saves and `save_disable`/`save_enable`. Inspect the full relevant log interval for new errors.
 
-The optional save-telemetry branch is reviewed and updated separately from the main compatibility changes.
+## Save telemetry on this branch
+
+The save hooks target `ZNet.SaveWorld`, `ZDOMan.PrepareSave`, `ZDOMan.SaveChunks`, and `ZNet.SaveWorldThread`. The removed `ZDOMan.SaveAsync.enter/exit` phases become `ZDOMan.SaveChunks.enter/exit`; update consumers that select the old names.
+
+Save-worker events reuse a snapshot captured on the main thread. `worldSnapshotCapturedAt` records when the counts were sampled; they are not fresh worker-thread counts. Timers belong to each method invocation. `SaveChunks.exit` includes its Boolean result and any escaping exception. `SaveWorld.async.exit` only means scheduling returned. `SaveWorldThread.exit` measures the worker duration and does not imply success because the game handles some failures internally.
+
+Live validation still needs successful and failed saves, consecutive asynchronous saves, and confirmation that logging does not alter save behavior.
