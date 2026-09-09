@@ -45,6 +45,7 @@ public class RefreshObjects(Terminal context, HashSet<string> ids, DataParameter
     {
       if (!zdo.IsOwner())
         zdo.SetOwner(ZDOMan.GetSessionID());
+      Helper.MarkChanged(zdo);
     }
     return updated;
   }
@@ -62,10 +63,6 @@ public class RefreshObjects(Terminal context, HashSet<string> ids, DataParameter
   {
     var str = zdo.GetString(ZDOVars.s_items);
     if (string.IsNullOrEmpty(str)) return "";
-    ZPackage current = new(str);
-    ZPackage empty = new();
-    empty.Write(current.ReadInt());
-    empty.Write(0);
-    return empty.GetBase64();
+    return InventoryData.Empty();
   }
 }

@@ -3,7 +3,7 @@ namespace UpgradeWorld;
 
 public interface IZoneFilterer
 {
-  Vector2i[] FilterZones(Vector2i[] zones, ref List<string> messages);
+  Vector2s[] FilterZones(Vector2s[] zones, ref List<string> messages);
 }
 
 public static class FiltererFactory

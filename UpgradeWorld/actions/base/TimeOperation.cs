@@ -43,7 +43,7 @@ public abstract class TimeOperation(Terminal context) : BaseOperation(context)
         updated[parameter]++;
         changed = true;
       }
-      if (changed) zdo.IncreaseDataRevision();
+      if (changed) Helper.MarkChanged(zdo);
     }
     if (Settings.Verbose)
     {

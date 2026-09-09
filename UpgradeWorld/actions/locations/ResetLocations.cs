@@ -12,11 +12,11 @@ public class RegenerateLocations : LocationOperation
     Filterers = [.. Filterers, new LocationFilterer(ids, false)];
   }
 
-  protected override bool ExecuteLocation(Vector2i zone, ZoneSystem.LocationInstance location)
+  protected override bool ExecuteLocation(Vector2s zone, ZoneSystem.LocationInstance location)
   {
     if (!location.m_placed) return false;
     location.m_placed = false;
-    ZoneSystem.instance.m_locationInstances[zone] = location;
+    LocationRegistry.Set(zone, location);
     if (location.m_location?.m_prefab == null)
     {
       Print("Location " + (location.m_location?.m_prefab.Name ?? "???") + " is missing at " + zone.ToString());

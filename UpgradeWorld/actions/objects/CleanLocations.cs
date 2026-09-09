@@ -22,7 +22,7 @@ public class CleanLocations : EntityOperation
       return assetId == null || !Runtime.Loader.IsAvailable(assetId.Value);
     }).Select(x => x.Key).ToList();
     foreach (var zone in toRemove)
-      zs.m_locationInstances.Remove(zone);
+      LocationRegistry.Remove(zone);
     if (alwaysPrint || toRemove.Count > 0)
       Print($"Removed {toRemove.Count} missing location entries.");
 

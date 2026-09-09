@@ -13,26 +13,18 @@ public class ZDOData
     Load(zdo);
   }
 
-  public ZDO Clone()
+  public ZDO Clone() => Create(Zdo.m_position, Zdo.m_rotation);
+
+  public ZDO Move(Vector3 pos, Quaternion rot) => Create(pos, rot.eulerAngles);
+
+  private ZDO Create(Vector3 pos, Vector3 rotation)
   {
-    var zdo = ZDOMan.instance.CreateNewZDO(Zdo.m_position, 0);
+    ZDO zdo = ZDOMan.instance.CreateNewZDO(pos, Prefab);
     zdo.Persistent = Zdo.Persistent;
     zdo.Type = Zdo.Type;
     zdo.Distant = Zdo.Distant;
-    zdo.m_prefab = Prefab;
-    zdo.m_rotation = Zdo.m_rotation;
-    zdo.SetOwnerInternal(Zdo.GetOwner());
-    Write(zdo);
-    return zdo;
-  }
-  public ZDO Move(Vector3 pos, Quaternion rot)
-  {
-    var zdo = ZDOMan.instance.CreateNewZDO(pos, 0);
-    zdo.Persistent = Zdo.Persistent;
-    zdo.Type = Zdo.Type;
-    zdo.Distant = Zdo.Distant;
-    zdo.m_prefab = Prefab;
-    zdo.m_rotation = rot.eulerAngles;
+    zdo.SetPrefab(Prefab);
+    zdo.m_rotation = rotation;
     zdo.SetOwnerInternal(Zdo.GetOwner());
     Write(zdo);
     return zdo;
@@ -80,6 +72,7 @@ public class ZDOData
 
     HandleConnection(zdo);
     HandleHashConnection(zdo);
+    UpgradeWorld.Helper.MarkChanged(zdo);
   }
   private void HandleConnection(ZDO ownZdo)
   {

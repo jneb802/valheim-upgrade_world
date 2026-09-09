@@ -44,7 +44,7 @@ public class RemoveLocations : ExecutedOperation
       }
       Helper.RemoveZDO(zdo);
       removed++;
-      zs.m_locationInstances.Remove(zone);
+      LocationRegistry.Remove(zone);
       if (Settings.Verbose)
         Print($"Location {name} removed at {zone}.");
     }
@@ -63,7 +63,7 @@ public class RemoveLocations : ExecutedOperation
       var resetRadius = Args.TerrainReset == 0f ? location.m_exteriorRadius : Args.TerrainReset;
       ResetTerrain.Execute(kvp.Value.m_position, resetRadius);
       removed++;
-      zs.m_locationInstances.Remove(zone);
+      LocationRegistry.Remove(zone);
       if (Settings.Verbose)
         Print($"Location {name} removed at {zone}.");
     }
@@ -86,7 +86,7 @@ public class RemoveLocations : ExecutedOperation
       AddPin(location.m_position);
       if (Settings.Verbose)
         Print("Location " + location.m_location.m_prefab.Name + " removed at " + zone.ToString());
-      zs.m_locationInstances.Remove(zone);
+      LocationRegistry.Remove(zone);
     }
     return removed;
   }
