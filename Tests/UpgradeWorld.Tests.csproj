@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ValheimManagedPath Condition="'$(ValheimManagedPath)' == ''">$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim/Valheim.app/Contents/Resources/Data/Managed</ValheimManagedPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../UpgradeWorld/UpgradeWorld.csproj" />
+    <Reference Include="assembly_valheim" HintPath="../../Libs/assembly_valheim.dll" />
+    <Reference Include="assembly_utils" HintPath="../../Libs/assembly_utils.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="../../Libs/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.PhysicsModule" HintPath="$(ValheimManagedPath)/UnityEngine.PhysicsModule.dll" />
+    <Reference Include="UnityEngine.SharedInternalsModule" HintPath="$(ValheimManagedPath)/UnityEngine.SharedInternalsModule.dll" />
+    <Reference Include="SoftReferenceableAssets" HintPath="../../Libs/SoftReferenceableAssets.dll" />
+  </ItemGroup>
+</Project>

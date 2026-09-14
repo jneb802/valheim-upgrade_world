@@ -82,6 +82,7 @@ Most commands allow fine-tuning the affected area. Following parameters are avai
 - `noEdges`: Only include zones that have included biomes in all of its corners. Without the flag, it's enough if just one of the corners is in the included biomes.
 - `pin`: Shows the result on the map. Requires Server Devcommands mod.
 - `pos=x,z`: Position of the center. Default value is the world center. Default distance is all of the map.
+- `quadrant=northeast|northwest|southeast|southwest`: Only includes positions in the selected quadrant relative to the center. Short forms `ne`, `nw`, `se`, and `sw` are accepted. Multiple quadrants can be separated by commas. The center defaults to world coordinate `0,0`; use `pos` or `zone` to change it. North is positive Z and east is positive X. Each position belongs to exactly one quadrant, including positions on the center axes.
 - `print=key,type`: Prints object data. Type is only needed if the same key is used for multiple types. Only applies to `objects_list` command. Multiple values can be printed at once.
 - `safeZones=distance`: Set safe zone size of major structures (0 to disable). Default value 2 is defined in the config. List of major structures is also defined in the config.
 - `start`: Automatically executes the command without having to use `start`. Can be permanently turned on from the config.
@@ -168,6 +169,7 @@ Examples:
 - `zones_generate`: To generate the entire world (takes hours) and then use `objects_remove` for modifications.
 - `zones_reset biomes=mistlands`: Destroying a biome.
 - `zones_reset min=5000`: Destroying areas after 5000 meters from the world center.
+- `zones_reset quadrant=northeast safeZones=2`: Destroying generated zones in the northeast quadrant while retaining player base protection.
 - `zones_reset zone=3,-3 safeZones=0`: Destroy a single zone at indices 3,-3 to fix any local issues.
 
 ## Configuration
