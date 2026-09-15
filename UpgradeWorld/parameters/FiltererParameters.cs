@@ -27,6 +27,8 @@ public class FiltererParameters
   public float TerrainReset = 0f;
   public float? ObjectReset;
   public int SafeZones = Settings.SafeZoneSize;
+  public HashSet<WorldQuadrant> Quadrants = [];
+  public List<string> InvalidQuadrants = [];
   public HashSet<string> LocationIds = [];
   public TargetZones TargetZones = TargetZones.Generated;
   public bool Pin;
@@ -53,6 +55,8 @@ public class FiltererParameters
     Chance = pars.Chance;
     Amount = pars.Amount;
     SafeZones = pars.SafeZones;
+    Quadrants = pars.Quadrants;
+    InvalidQuadrants = pars.InvalidQuadrants;
     TargetZones = pars.TargetZones;
     Unhandled = pars.Unhandled;
     ObjectReset = pars.ObjectReset;
@@ -85,6 +89,14 @@ public class FiltererParameters
           MaxDistance = distance.Max;
         }
         else if (name == "biomes") Biomes = Parse.Biomes(value);
+        else if (name == "quadrant" || name == "quadrants")
+        {
+          foreach (string quadrantValue in value.Split(','))
+          {
+            if (QuadrantFilterer.TryParse(quadrantValue, out WorldQuadrant quadrant)) Quadrants.Add(quadrant);
+            else InvalidQuadrants.Add(quadrantValue);
+          }
+        }
         else if (name == "locations")
         {
           HasLocationFilter = true;
@@ -108,6 +120,11 @@ public class FiltererParameters
   }
   public virtual bool Valid(Terminal terminal)
   {
+    if (InvalidQuadrants.Count > 0)
+    {
+      Helper.Print(terminal, "Error: Invalid quadrants " + string.Join(", ", InvalidQuadrants) + ". Use northeast, northwest, southeast, or southwest.");
+      return false;
+    }
     if (HasLocationFilter && LocationIds.Count == 0)
     {
       Helper.Print(terminal, "Error: No locations matched the locations filter.");
@@ -153,6 +170,11 @@ public class FiltererParameters
       if (MinDistance > 0 && Utils.DistanceXZ(pos, position) < MinDistance) return false;
       if (MaxDistance > 0 && Utils.DistanceXZ(pos, position) > MaxDistance) return false;
     }
+    if (Quadrants.Count > 0)
+    {
+      Vector2 center = GetCenter();
+      if (!Quadrants.Contains(QuadrantFilterer.GetQuadrant(new Vector2(pos.x, pos.z), center))) return false;
+    }
     if (checkExcludedZones && PlayerBaseFilterer.ExcludedZones.Contains(ZoneSystem.GetZone(pos))) return false;
     if (LocationIds.Count > 0)
     {
@@ -173,6 +195,16 @@ public class FiltererParameters
     return zdos.OrderBy(zdo => Utils.DistanceXZ(zdo.GetPosition(), pos)).Take(Limit);
   }
   public virtual IEnumerable<ZoneSystem.LocationInstance> FilterLocations(IEnumerable<ZoneSystem.LocationInstance> locations) => locations.Where(location => FilterPosition(location.m_position, true));
+
+  public Vector2 GetCenter()
+  {
+    if (Zone.HasValue)
+    {
+      Vector3 zoneCenter = ZoneSystem.GetZonePos(Zone.Value);
+      return new Vector2(zoneCenter.x, zoneCenter.z);
+    }
+    return Pos ?? Vector2.zero;
+  }
 
   public string Print(string operation)
   {
@@ -213,6 +245,8 @@ public class FiltererParameters
     }
     else if (Zone.HasValue)
       str += " at index " + Zone.Value.x + "," + Zone.Value.y;
+    if (Quadrants.Count > 0)
+      str += " in the " + string.Join(", ", Quadrants.Select(QuadrantName).OrderBy(name => name)) + (Quadrants.Count == 1 ? " quadrant" : " quadrants");
     var size = 1 + (SafeZones - 1) * 2;
     if (SafeZones <= 0)
       str += ". No player base detection.";
@@ -223,7 +257,7 @@ public class FiltererParameters
     return str;
   }
   public static List<string> Parameters = [
-    "clear", "terrain", "pos", "zone", "biomes", "locations", "min", "minDistance", "max", "maxDistance", "distance", "start", "noEdges", "safeZones", "chance", "force"
+    "clear", "terrain", "pos", "zone", "biomes", "locations", "min", "minDistance", "max", "maxDistance", "distance", "quadrant", "start", "noEdges", "safeZones", "chance", "force"
   ];
   public static Dictionary<string, Func<int, List<string>?>> GetAutoComplete()
   {
@@ -233,6 +267,7 @@ public class FiltererParameters
       { "zone", index => CommandWrapper.XZ("zone" , "Indices for the center zone", index) },
       { "biomes", index => Enum.GetNames(typeof(Heightmap.Biome)).ToList() },
       { "locations", index => LocationOperation.AllIds() },
+      { "quadrant", index => index == 0 ? ["northeast", "northwest", "southeast", "southwest"] : null },
       { "min", index => index == 0 ? CommandWrapper.Info("min=<color=yellow>meters or zones</color> | Minimum distance from the center point / zone.") : null },
       { "minDistance", index => index == 0 ? CommandWrapper.Info("minDistance=<color=yellow>meters or zones</color> | Minimum distance from the center point / zone.") : null },
       { "max", index => index == 0 ? CommandWrapper.Info("max=<color=yellow>meters or zones</color> | Maximum distance from the center point / zone.") : null },
@@ -257,5 +292,13 @@ public class FiltererParameters
   public static System.Random random = new();
   public bool Roll() => Chance >= 1f || random.NextDouble() < Chance;
   public bool RollAmount() => Amount >= 1f || random.NextDouble() < Amount;
-}
 
+  private static string QuadrantName(WorldQuadrant quadrant) => quadrant switch
+  {
+    WorldQuadrant.NorthEast => "northeast",
+    WorldQuadrant.NorthWest => "northwest",
+    WorldQuadrant.SouthEast => "southeast",
+    WorldQuadrant.SouthWest => "southwest",
+    _ => quadrant.ToString().ToLowerInvariant()
+  };
+}
