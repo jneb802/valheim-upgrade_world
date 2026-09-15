@@ -1,3 +1,6 @@
+- v1.83
+  - Adds quadrant filtering to zone, object, and location operations. Use `quadrant=northeast`, `northwest`, `southeast`, or `southwest`; short names and comma-separated values are also supported.
+
 - v1.82
   - Adds new upgrade operation `bearcave` for some latest locations.
   - Adds support for new inventory format (including old format for compatibility). Thanks JPValheim!
