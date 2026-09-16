@@ -27,6 +27,7 @@ public class FiltererParameters
   public float TerrainReset = 0f;
   public float? ObjectReset;
   public int SafeZones = Settings.SafeZoneSize;
+  public int TerrainSafeZones = 0;
   public HashSet<WorldQuadrant> Quadrants = [];
   public List<string> InvalidQuadrants = [];
   public HashSet<string> LocationIds = [];
@@ -55,6 +56,7 @@ public class FiltererParameters
     Chance = pars.Chance;
     Amount = pars.Amount;
     SafeZones = pars.SafeZones;
+    TerrainSafeZones = pars.TerrainSafeZones;
     Quadrants = pars.Quadrants;
     InvalidQuadrants = pars.InvalidQuadrants;
     TargetZones = pars.TargetZones;
@@ -73,6 +75,7 @@ public class FiltererParameters
       {
         var value = split[1];
         if (name == "safezones") SafeZones = Parse.Int(value, 2);
+        else if (name == "terrainsafezones") TerrainSafeZones = Parse.Int(value, 0);
         else if (name == "limit") Limit = Parse.Int(value, 0);
         else if (name == "pos") Pos = Parse.Pos(value);
         else if (name == "zone") Zone = Parse.Zone(value);
@@ -108,7 +111,11 @@ public class FiltererParameters
       else if (name == "start") Start = true;
       else if (name == "pin") Pin = true;
       else if (name == "zone") Zone = Helper.GetPlayerZone();
-      else if (name == "force") SafeZones = 0;
+      else if (name == "force")
+      {
+        SafeZones = 0;
+        TerrainSafeZones = 0;
+      }
       else Unhandled.Add(par);
     }
     if (Chance > 1f) Chance /= 100f;
@@ -252,12 +259,17 @@ public class FiltererParameters
       str += ". No player base detection.";
     else
       str += ". Player base detection (" + size + "x" + size + " safe zones).";
+    if (TerrainSafeZones > 0)
+    {
+      int terrainSize = 1 + (TerrainSafeZones - 1) * 2;
+      str += " Terrain modification protection (" + terrainSize + "x" + terrainSize + " safe zones).";
+    }
     if (LocationIds.Count > 0)
       str += "\nOnly locations" + LocationOperation.IdString(LocationIds);
     return str;
   }
   public static List<string> Parameters = [
-    "clear", "terrain", "pos", "zone", "biomes", "locations", "min", "minDistance", "max", "maxDistance", "distance", "quadrant", "start", "noEdges", "safeZones", "chance", "force"
+    "clear", "terrain", "pos", "zone", "biomes", "locations", "min", "minDistance", "max", "maxDistance", "distance", "quadrant", "start", "noEdges", "safeZones", "terrainSafeZones", "chance", "force"
   ];
   public static Dictionary<string, Func<int, List<string>?>> GetAutoComplete()
   {
@@ -273,12 +285,13 @@ public class FiltererParameters
       { "max", index => index == 0 ? CommandWrapper.Info("max=<color=yellow>meters or zones</color> | Maximum distance from the center point / zone.") : null },
       { "maxDistance", index => index == 0 ? CommandWrapper.Info("maxDistance=<color=yellow>meters or zones</color> | Maximum distance from the center point / zone.") : null },
       { "safeZones", index => index == 0 ? CommandWrapper.Info("safezones=<color=yellow>amount</color> | The size of protected areas around player base structures.") : null },
+      { "terrainSafeZones", index => index == 0 ? CommandWrapper.Info("terrainSafeZones=<color=yellow>amount</color> | The size of protected areas around terrain modifications.") : null },
       { "chance", index => index == 0 ? CommandWrapper.Info("chance=<color=yellow>percentage</color> (from 0 to 100) | The chance of a single operation being done.") : null },
       { "amount", index => index == 0 ? CommandWrapper.Info("amount=<color=yellow>number</color> | Multiplies the affected objects.") : null },
       { "terrain", index => index == 0 ? CommandWrapper.Info("terrain=<color=yellow>meters</color> | Radius of reseted terrain.") : null },
       { "clear", index => index == 0 ? CommandWrapper.Info("clear=<color=yellow>meters</color> | Overrides the radius of removed objects.") : null },
       { "start", index => CommandWrapper.Flag("start", "Starts the operation instantly") },
-      { "force", index => CommandWrapper.Flag("force", "Disables the player base detection") },
+      { "force", index => CommandWrapper.Flag("force", "Disables protected zone detection") },
       { "pin", index => CommandWrapper.Flag("pin", "Pins results on the map") },
       { "noEdges", index => CommandWrapper.Flag("noedges", "Excludes zones with multiple biomes") },
       { "distance", index => {

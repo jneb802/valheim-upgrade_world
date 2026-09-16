@@ -88,10 +88,11 @@ public class ResetZones : ZoneOperation
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
     BorderZones = BorderZones.Where(kvp => ZoneSystem.instance.IsZoneGenerated(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-    new ResetBorder(Context, BorderZones);
+    TerrainModificationFilterer? terrainFilterer = Filterers.OfType<TerrainModificationFilterer>().FirstOrDefault();
+    HashSet<Vector2s> terrainProtectedZones = terrainFilterer?.ExcludedZones ?? [];
+    new ResetBorder(Context, BorderZones, terrainProtectedZones);
     ClutterSystem.instance?.ClearAll();
     Helper.RecalculateTerrain();
     Minimap.instance?.UpdateLocationPins(1000);
   }
 }
-
