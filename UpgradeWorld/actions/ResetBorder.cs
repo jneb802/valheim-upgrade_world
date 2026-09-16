@@ -8,22 +8,30 @@ public enum Direction { None, North, East, South = 4, West = 8, NorthEast = 16, 
 /// <summary>Destroys everything in a zone so that the world generator can regenerate it.</summary>
 public class ResetBorder : EntityOperation
 {
-  public ResetBorder(Terminal context, Dictionary<Vector2s, Direction> zones) : base(context, false)
+  public ResetBorder(Terminal context, Dictionary<Vector2s, Direction> zones, HashSet<Vector2s> terrainProtectedZones) : base(context, false)
   {
-    Execute(zones);
+    Execute(zones, terrainProtectedZones);
   }
-  private void Execute(Dictionary<Vector2s, Direction> zones)
+  private void Execute(Dictionary<Vector2s, Direction> zones, HashSet<Vector2s> terrainProtectedZones)
   {
-    var zdos = GetZDOs(Settings.TerrainCompilerHash);
-    var reseted = 0;
-    foreach (var zdo in zdos)
+    ZDO[] zdos = GetZDOs(Settings.TerrainCompilerHash);
+    int reseted = 0;
+    int protectedZones = 0;
+    foreach (ZDO zdo in zdos)
     {
-      var zone = ZoneSystem.GetZone(zdo.GetPosition());
-      if (!zones.ContainsKey(zone)) continue;
-      Update(zdo, zones[zone]);
+      Vector2s zone = ZoneSystem.GetZone(zdo.GetPosition());
+      if (!zones.TryGetValue(zone, out Direction direction)) continue;
+      if (terrainProtectedZones.Contains(zone))
+      {
+        protectedZones++;
+        continue;
+      }
+      Update(zdo, direction);
       reseted += 1;
     }
-    Print($"{reseted} border zones reseted");
+    string message = $"{reseted} border zones reseted";
+    if (protectedZones > 0) message += $". {protectedZones} protected by terrain modifications";
+    Print(message);
   }
 
   private void Update(ZDO zdo, Direction direction)
@@ -97,4 +105,3 @@ public class ResetBorder : EntityOperation
   }
 
 }
-
