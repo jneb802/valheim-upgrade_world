@@ -28,15 +28,18 @@ public static class Helper
     zman.FindObjects(zone, list, zman.m_visitedSectorIndices);
     return list;
   }
-  public static void RemoveZDO(ZDO zdo)
+  public static void RemoveZDO(ZDO zdo) => RemoveZDO(zdo, null);
+  public static void RemoveZDO(ZDO zdo, ResetZdoCounter? counter)
   {
     if (zdo == null || !zdo.IsValid()) return;
     if (Player.m_localPlayer && Player.m_localPlayer.GetZDOID() == zdo.m_uid) return;
     if (ZNet.instance.m_peers.Any(peer => peer.m_characterID == zdo.m_uid)) return;
+    if (counter != null && !counter.Visit(zdo.m_uid)) return;
+    counter?.Request(zdo.m_uid);
     zdo.SetOwnerInternal(ZDOMan.GetSessionID());
     var spawned = zdo.GetConnectionZDOID(ZDOExtraData.ConnectionType.Spawned);
     if (spawned != ZDOID.None && ZDOMan.instance.m_objectsByID.TryGetValue(spawned, out var spawnedZdo) && spawnedZdo != zdo)
-      RemoveZDO(spawnedZdo);
+      RemoveZDO(spawnedZdo, counter);
     if (ZNetScene.instance.m_instances.TryGetValue(zdo, out var view))
       ZNetScene.instance.Destroy(view.gameObject);
     else
@@ -237,4 +240,3 @@ public static class Helper
     }
   }
 }
-

@@ -63,6 +63,7 @@ public abstract class ExecutedOperation(Terminal context, bool pin = false) : Ba
   private void ReportFailure(Exception failure)
   {
     ExecutionFailed = true;
+    OnFailure(failure);
     Print($"Operation failed: {failure.Message}. Remaining queued operations will be cancelled. Changes already made are not rolled back.");
     UpgradeWorld.Log.LogError(failure);
   }
@@ -90,4 +91,6 @@ public abstract class ExecutedOperation(Terminal context, bool pin = false) : Ba
   public string GetInfo() => queuedInfo != "" ? queuedInfo : GetType().Name;
   protected virtual void OnStart() { }
   protected virtual void OnEnd() { }
+  protected virtual void OnFailure(Exception failure) { }
+  public virtual void Cancel() { }
 }

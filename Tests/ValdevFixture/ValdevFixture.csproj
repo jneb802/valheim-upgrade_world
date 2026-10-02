@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><LangVersion>preview</LangVersion><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="assembly_valheim" HintPath="../../../Libs/assembly_valheim.dll" />
+    <Reference Include="assembly_utils" HintPath="../../../Libs/assembly_utils.dll" />
+    <Reference Include="UnityEngine" HintPath="../../../Libs/UnityEngine.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="../../../Libs/UnityEngine.CoreModule.dll" />
+    <Reference Include="BepInEx" HintPath="../../../Libs/BepInEx.dll" />
+    <Reference Include="0Harmony" HintPath="../../../Libs/0Harmony.dll" />
+  </ItemGroup>
+</Project>
