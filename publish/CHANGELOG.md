@@ -1,3 +1,8 @@
+- v1.85
+  - Reports confirmed ZDO removals for zone resets, including linked spawned objects.
+  - Writes operation results to the server log and a JSON result file. Reports world totals separately from reset removals.
+  - Reports incomplete counts when deletion confirmation times out or an operation fails or stops.
+
 - v1.84
   - Adds `terrainSafeZones` filtering to protect persisted terrain modifications during zone resets.
   - Preserves terrain height changes in protected zones beside reset zones.

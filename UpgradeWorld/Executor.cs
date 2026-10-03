@@ -31,6 +31,7 @@ public static class Executor
 
   public static void StopExecution()
   {
+    foreach (ExecutedOperation operation in operations.ToArray()) operation.Cancel();
     operations.Clear();
     // Needed to indicate end of generation for some mods.
     if (Hud.instance)
@@ -76,6 +77,7 @@ public static class Executor
         // If operation fails, probably good idea to stop everything.
         if (operation.ExecutionFailed)
         {
+          foreach (ExecutedOperation queued in operations.ToArray()) queued.Cancel();
           operations.Clear();
           break;
         }

@@ -13,7 +13,7 @@ public class ZonesResetCommand
       FiltererParameters pars = new(args);
       if (!pars.Valid(args.Context)) return;
       if (Helper.IsClient(args)) return;
-      Executor.AddOperation(new ResetZones(args.Context, pars), pars.Start);
+      Executor.AddOperation(new ResetZones(args.Context, pars, string.Join(" ", args.Args)), pars.Start);
     }, () => FiltererParameters.Parameters);
   }
 }
