@@ -114,7 +114,12 @@ public static class Helper
   }
   public static void Print(Terminal terminal, ZRpc? user, string value)
   {
-    if (ZNet.m_isServer && user != null)
+    // Dedicated-server automation needs status even when mods suppress Console: logs.
+    if (ZNet.instance && ZNet.instance.IsDedicated())
+    {
+      UpgradeWorld.Log.LogInfo(value);
+    }
+    if (ZNet.instance && ZNet.m_isServer && user != null)
     {
       ZNet.instance.RemotePrint(user, value);
     }
