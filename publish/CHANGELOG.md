@@ -1,3 +1,6 @@
+- v1.86
+  - Keeps dedicated-server queue status and reset progress in the mod log when BetterZeeLog filters console messages.
+
 - v1.85
   - Reports confirmed ZDO removals for zone resets, including linked spawned objects.
   - Writes operation results to the server log and a JSON result file. Reports world totals separately from reset removals.
