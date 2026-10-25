@@ -19,6 +19,7 @@ public static class FiltererFactory
     if (args.TerrainSafeZones > 0) filters.Add(new TerrainModificationFilterer(args.TerrainSafeZones));
     if (args.Chance < 1f) filters.Add(new ChanceFilterer(args.Chance));
     if (args.LocationIds.Count > 0) filters.Add(new LocationFilterer(args.LocationIds, false));
+    if (args.ExcludedLocationIds.Count > 0) filters.Add(new ExcludedLocationFilterer(args));
     return filters;
   }
 }

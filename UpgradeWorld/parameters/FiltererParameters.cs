@@ -31,6 +31,8 @@ public class FiltererParameters
   public HashSet<WorldQuadrant> Quadrants = [];
   public List<string> InvalidQuadrants = [];
   public HashSet<string> LocationIds = [];
+  public HashSet<string> ExcludedLocationIds = [];
+  private List<string> InvalidExcludedLocations = [];
   public TargetZones TargetZones = TargetZones.Generated;
   public bool Pin;
   public List<string> Unhandled = [];
@@ -45,6 +47,8 @@ public class FiltererParameters
     Limit = pars.Limit;
     Pin = pars.Pin;
     LocationIds = pars.LocationIds;
+    ExcludedLocationIds = pars.ExcludedLocationIds;
+    InvalidExcludedLocations = pars.InvalidExcludedLocations;
     HasLocationFilter = pars.HasLocationFilter;
     BiomeMask = pars.BiomeMask;
     NoEdges = pars.NoEdges;
@@ -105,6 +109,15 @@ public class FiltererParameters
           HasLocationFilter = true;
           LocationIds = LocationOperation.Ids(value.Split(','), []);
         }
+        else if (name == "excludelocations")
+        {
+          foreach (string pattern in value.Split(',').Select(value => value.Trim()))
+          {
+            HashSet<string> matches = pattern.Length == 0 ? [] : LocationOperation.Ids([pattern], []);
+            if (matches.Count == 0) InvalidExcludedLocations.Add(pattern.Length == 0 ? "<empty>" : pattern);
+            ExcludedLocationIds.UnionWith(matches);
+          }
+        }
         else Unhandled.Add(par);
       }
       else if (name == "noedges") NoEdges = true;
@@ -127,6 +140,11 @@ public class FiltererParameters
   }
   public virtual bool Valid(Terminal terminal)
   {
+    if (InvalidExcludedLocations.Count > 0)
+    {
+      Helper.Print(terminal, "Error: No locations matched excludeLocations: " + string.Join(", ", InvalidExcludedLocations) + ".");
+      return false;
+    }
     if (InvalidQuadrants.Count > 0)
     {
       Helper.Print(terminal, "Error: Invalid quadrants " + string.Join(", ", InvalidQuadrants) + ". Use northeast, northwest, southeast, or southwest.");
@@ -190,8 +208,12 @@ public class FiltererParameters
       if (!zs.m_locationInstances.TryGetValue(zone, out var location) || !LocationIds.Contains(location.m_location.m_prefab.Name))
         return false;
     }
+    if (IsLocationExcluded(ZoneSystem.GetZone(pos))) return false;
     return true;
   }
+  public bool IsLocationExcluded(Vector2s zone) => ExcludedLocationIds.Count > 0 &&
+    ZoneSystem.instance.m_locationInstances.TryGetValue(zone, out ZoneSystem.LocationInstance location) &&
+    ExcludedLocationIds.Contains(location.m_location.m_prefab.Name);
   public virtual IEnumerable<ZDO> FilterZdos(IEnumerable<ZDO> zdos, bool checkExcludedZones) => zdos
     .Where(zdo => FilterPosition(zdo.GetPosition(), checkExcludedZones) && Roll());
 
@@ -266,10 +288,12 @@ public class FiltererParameters
     }
     if (LocationIds.Count > 0)
       str += "\nOnly locations" + LocationOperation.IdString(LocationIds);
+    if (ExcludedLocationIds.Count > 0)
+      str += "\nExcluded locations" + LocationOperation.IdString(ExcludedLocationIds);
     return str;
   }
   public static List<string> Parameters = [
-    "clear", "terrain", "pos", "zone", "biomes", "locations", "min", "minDistance", "max", "maxDistance", "distance", "quadrant", "start", "noEdges", "safeZones", "terrainSafeZones", "chance", "force"
+    "clear", "terrain", "pos", "zone", "biomes", "locations", "excludeLocations", "min", "minDistance", "max", "maxDistance", "distance", "quadrant", "start", "noEdges", "safeZones", "terrainSafeZones", "chance", "force"
   ];
   public static Dictionary<string, Func<int, List<string>?>> GetAutoComplete()
   {
@@ -279,6 +303,7 @@ public class FiltererParameters
       { "zone", index => CommandWrapper.XZ("zone" , "Indices for the center zone", index) },
       { "biomes", index => Enum.GetNames(typeof(Heightmap.Biome)).ToList() },
       { "locations", index => LocationOperation.AllIds() },
+      { "excludeLocations", index => LocationOperation.AllIds() },
       { "quadrant", index => index == 0 ? ["northeast", "northwest", "southeast", "southwest"] : null },
       { "min", index => index == 0 ? CommandWrapper.Info("min=<color=yellow>meters or zones</color> | Minimum distance from the center point / zone.") : null },
       { "minDistance", index => index == 0 ? CommandWrapper.Info("minDistance=<color=yellow>meters or zones</color> | Minimum distance from the center point / zone.") : null },
