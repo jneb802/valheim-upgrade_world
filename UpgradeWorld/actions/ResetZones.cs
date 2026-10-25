@@ -119,7 +119,7 @@ public class ResetZones : ZoneOperation
     var text = $"{Operation} completed. {Reseted} zones reseted.";
     if (Failed > 0) text += " " + Failed + " errors.";
     Print(text);
-    BorderZones = BorderZones.Where(kvp => ZoneSystem.instance.IsZoneGenerated(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    BorderZones = BorderZones.Where(kvp => ZoneSystem.instance.IsZoneGenerated(kvp.Key) && !Args.IsLocationExcluded(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     TerrainModificationFilterer? terrainFilterer = Filterers.OfType<TerrainModificationFilterer>().FirstOrDefault();
     HashSet<Vector2s> terrainProtectedZones = terrainFilterer?.ExcludedZones ?? [];
     new ResetBorder(Context, BorderZones, terrainProtectedZones);
